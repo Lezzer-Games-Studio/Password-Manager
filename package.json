@@ -1,168 +1,65 @@
 {
   "name": "password-manager",
-  "version": "1.0.0",
-  "description": "Password Manager на Electron з Free/Pro, синхронізацією та автооновленням",
+  "version": "1.0.1",
+  "description": "Password Manager with auto update",
   "main": "src/main/index.js",
   "author": "LEZZER GAMES STUDIO",
   "license": "MIT",
   "private": true,
+
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --dev",
-    "test": "echo \"No tests specified\" && exit 0",
-    "clean": "rimraf dist release build",
-    "clean:all": "rimraf dist release build node_modules package-lock.json",
-    "prebuild": "npm run clean",
-    "build": "electron-builder --win --publish never",
-    "build:win": "electron-builder --win --x64",
-    "build:win-portable": "electron-builder --win --x64 --config.win.target=portable",
-    "build:win-nsis": "electron-builder --win --x64 --config.win.target=nsis",
-    "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux",
-    "build:all": "electron-builder -wl",
-    "package": "electron-packager . PasswordManager --out=release --overwrite --platform=win32 --arch=x64 --icon=build/icon.ico --prune=true",
-    "package:all": "electron-packager . PasswordManager --out=release --overwrite --all --icon=build/icon.ico --prune=true",
-    "postinstall": "electron-builder install-app-deps",
-    "release": "npm run build:win && npm run publish"
+    "dev": "electron .",
+    "clean": "rimraf dist",
+    "build:win": "electron-builder --win --x64 --publish never",
+    "build:publish": "electron-builder --win --x64 --publish always"
   },
-  "keywords": [
-    "electron",
-    "password-manager",
-    "crypto",
-    "security",
-    "encryption"
-  ],
-  "engines": {
-    "node": ">=24.0.0",
-    "npm": ">=10.0.0"
-  },
+
   "dependencies": {
-    "@stripe/stripe-js": "^8.6.1",
-    "crypto-js": "^4.2.0",
     "electron-log": "^5.2.0",
-    "electron-updater": "^6.7.3",
-    "express": "^4.18.2",
-    "firebase": "^12.7.0",
-    "node-fetch": "^3.3.1",
-    "sqlite3": "^5.1.7"
+    "electron-updater": "^6.7.3"
   },
+
   "devDependencies": {
-    "@types/node": "^20.10.0",
-    "concurrently": "^8.2.2",
     "electron": "^39.2.7",
     "electron-builder": "^24.13.3",
-    "electron-devtools-installer": "^3.2.0",
-    "electron-packager": "^17.1.2",
-    "electron-rebuild": "^3.2.9",
-    "rimraf": "^5.0.5",
-    "wait-on": "^7.0.1"
+    "rimraf": "^5.0.5"
   },
+
   "build": {
     "appId": "com.lezzergames.passwordmanager",
     "productName": "Password Manager",
-    "copyright": "Copyright © 2024 LEZZER GAMES STUDIO",
+
     "directories": {
       "output": "dist",
       "buildResources": "build"
     },
+
     "files": [
       "src/**/*",
-      "node_modules/**/*",
-      "package.json",
-      "!**/*.map",
-      "!**/.gitignore",
-      "!**/.DS_Store",
-      "!src/**/*.test.js",
-      "!src/**/*.spec.js"
+      "package.json"
     ],
-    "extraResources": [
-      {
-        "from": "build/",
-        "to": "build/",
-        "filter": [
-          "**/*"
-        ]
-      }
-    ],
+
     "asar": true,
-    "asarUnpack": [
-      "node_modules/crypto-js/**",
-      "node_modules/@stripe/stripe-js/**"
-    ],
-    "npmRebuild": false,
-    "nodeGypRebuild": false,
-    "buildDependenciesFromSource": false,
+
     "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "build/icon.ico",
-      "publisherName": "LEZZER GAMES STUDIO",
-      "verifyUpdateCodeSignature": false,
-      "signingHashAlgorithms": [
-        "sha256"
-      ],
-      "requestedExecutionLevel": "asInvoker",
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
+      "target": "nsis",
+      "icon": "build/icon.ico"
     },
+
     "nsis": {
       "oneClick": false,
-      "perMachine": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Password Manager",
-      "uninstallDisplayName": "Password Manager",
-      "license": "LICENSE",
-      "deleteAppDataOnUninstall": false,
-      "include": "build/installer.nsh"
+      "createStartMenuShortcut": true
     },
-    "portable": {
-      "artifactName": "${productName}-${version}-${arch}-portable.exe"
-    },
-    "mac": {
-      "target": [
-        "dmg",
-        "zip"
-      ],
-      "icon": "build/icon.icns",
-      "category": "public.app-category.productivity",
-      "identity": null,
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb",
-        "rpm",
-        "pacman"
-      ],
-      "icon": "build/icon.png",
-      "category": "Utility",
-      "synopsis": "Secure Password Manager",
-      "description": "A secure password manager with encryption and cloud sync",
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
-    },
+
     "publish": [
       {
-        "provider": "generic",
-        "url": "https://your-update-server.com/downloads/"
+        "provider": "github",
+        "owner": "Lezzer-Games-Studio",
+        "repo": "Password-Manager"
       }
-    ],
-    "extraMetadata": {
-      "main": "src/main/index.js"
-    },
-    "afterPack": "./build/after-pack.js"
+    ]
   }
 }

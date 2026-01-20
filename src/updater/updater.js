@@ -1,28 +1,32 @@
 const { autoUpdater } = require('electron-updater');
-const { ipcMain } = require('electron');
+const log = require('electron-log');
 
-// Налаштування для приватного репозиторію
-autoUpdater.requestHeaders = {
-  "Authorization": "token ВАШ_ТОКЕН_ГІТХАБУ" 
-};
-autoUpdater.autoDownload = true; // Автоматично качати, коли знайдено
+function initAutoUpdater() {
+  autoUpdater.logger = log;
+  autoUpdater.logger.transports.file.level = 'info';
 
-function initAutoUpdater(mainWindow) {
-  // Перевірка оновлень
+  autoUpdater.autoDownload = true;
+
   autoUpdater.checkForUpdatesAndNotify();
 
-  // Коли знайдено нову версію
+  autoUpdater.on('checking-for-update', () => {
+    log.info('Checking for update...');
+  });
+
   autoUpdater.on('update-available', (info) => {
-    mainWindow.webContents.send('update_available', info.version);
+    log.info('Update available:', info.version);
   });
 
-  // Коли файл завантажено
+  autoUpdater.on('update-not-available', () => {
+    log.info('No updates available');
+  });
+
+  autoUpdater.on('error', (err) => {
+    log.error('Update error:', err);
+  });
+
   autoUpdater.on('update-downloaded', () => {
-    mainWindow.webContents.send('update_downloaded');
-  });
-
-  // Слухаємо команду на перезапуск
-  ipcMain.on('restart_app', () => {
+    log.info('Update downloaded');
     autoUpdater.quitAndInstall();
   });
 }

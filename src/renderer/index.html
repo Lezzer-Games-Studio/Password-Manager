@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultSafe - Password Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f1117;
+            --sidebar-bg: #161920;
+            --card-bg: #1c202a;
+            --accent: #3b82f6;
+            --text-main: #ffffff;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.05);
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+        }
+
+        #root {
+            width: 100%;
+            display: flex;
+            transition: 0.3s;
+        }
+
+        /* Стилі для ЛОГІНУ та РЕЄСТРАЦІЇ (центрування) */
+        .auth-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f1117 100%);
+        }
+
+        .auth-card {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        /* Поля вводу */
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            background: #262c3a;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: white;
+            margin-bottom: 15px;
+            font-size: 14px;
+            outline: none;
+        }
+        input:focus { border-color: var(--accent); }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button.secondary { background: rgba(255,255,255,0.05); margin-top: 10px; }
+
+        /* DASHBOARD СТРУКТУРА */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .menu-item {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-dim);
+        }
+        .menu-item.active { background: rgba(59, 130, 246, 0.1); color: var(--accent); }
+        .menu-item:hover:not(.active) { background: rgba(255,255,255,0.03); }
+
+        .glass-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 24px;
+        }
+
+        .badge-premium {
+            background: rgba(234, 179, 8, 0.1);
+            color: #eab308;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .device-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .error-text { color: var(--danger); font-size: 13px; margin-top: 10px; }
+
+        .buy-btn {
+    transition: all 0.3s;
+}
+.buy-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.method-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid transparent;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.method-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.method-btn:hover:not(.active) {
+    background: rgba(255,255,255,0.1);
+}
+    </style>
+</head>
+<body>
+    <div id="root">
+            <!-- Контент загружается через JavaScript -->
+            <div style="display:flex; justify-content:center; align-items:center; width:100%;">
+                <p>Завантаження...</p>
+            </div>
+        </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>

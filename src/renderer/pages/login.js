@@ -18,12 +18,36 @@ export function renderLogin(auth, onToRegister) {
     `;
 
     document.getElementById("btn_login").onclick = async () => {
-        const email = document.getElementById("l_email").value;
-        const pass = document.getElementById("l_pass").value;
+        const email = document.getElementById("l_email").value.trim();
+        const pass = document.getElementById("l_pass").value; // пароль не тримимо, він може мати пробіли
+        const errorBox = document.getElementById("error_box");
+        const btn = document.getElementById("btn_login");
+
+        if (!email || !pass) {
+            errorBox.innerText = "Будь ласка, заповніть усі поля.";
+            return;
+        }
+
         try {
+            btn.disabled = true;
+            btn.innerText = "Вхід...";
+            errorBox.innerText = ""; // очищуємо старі помилки
+
             await signInWithEmailAndPassword(auth, email, pass);
+            
         } catch (e) {
-            document.getElementById("error_box").innerText = e.message;
+            console.error("Firebase Login Error:", e.code);
+            // Робимо помилку зрозумілішою для користувача
+            if (e.code === 'auth/invalid-credential') {
+                errorBox.innerText = "Неправильний email або пароль.";
+            } else if (e.code === 'auth/too-many-requests') {
+                errorBox.innerText = "Забагато спроб. Спробуйте пізніше.";
+            } else {
+                errorBox.innerText = "Помилка: " + e.message;
+            }
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Увійти";
         }
     };
     document.getElementById("to_reg").onclick = onToRegister;

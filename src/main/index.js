@@ -45,39 +45,79 @@
 
 
 
-const { app, BrowserWindow, Menu } = require('electron');
+// const { app, BrowserWindow, Menu, Notification } = require('electron');
+// const path = require('path');
+// const { initAutoUpdater } = require('../updater/updater');
+// require('./ipc'); 
+const { app, BrowserWindow, Menu, Notification } = require('electron'); // Всі модулі в одному рядку
 const path = require('path');
 const { initAutoUpdater } = require('../updater/updater');
-require('./ipc'); 
-
+require('./ipc');
 let mainWindow;
+
+// ВАЖЛИВО: Вкажіть ID вашого додатка для Windows (для сповіщень)
+// В main.js
+if (process.platform === 'win32') {
+    app.setAppUserModelId("Vaultsafe"); 
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 600,
+    width: 1100, 
+    height: 750,
+    minWidth: 900,
+    minHeight: 600,
+    center: true,
+    show: false, 
     webPreferences: {
-      // ПЕРЕКОНАЙСЯ, ЩО ШЛЯХ ДО ПРЕЛОАДА ПРАВИЛЬНИЙ
       preload: path.join(__dirname, '../preload/api.js'), 
       contextIsolation: true,
       nodeIntegration: false,
+      spellcheck: false, 
     },
   });
 
+  // Прибираємо меню
+  mainWindow.setMenuBarVisibility(false); 
+  Menu.setApplicationMenu(null);
+
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
-  // Коли вікно готове — запускаємо оновлювач
+  // Показуємо вікно, коли воно готове
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+    mainWindow.webContents.openDevTools(); // Розкоментуй, якщо потрібна консоль
+  });
+
+  // Ініціалізація оновлень
   mainWindow.webContents.on('did-finish-load', () => {
     initAutoUpdater(mainWindow);
   });
 
-  mainWindow.on('closed', () => { mainWindow = null; });
+  // ЛОГІКА ЗГОРТАННЯ В ТРЕЙ (замість повного закриття)
+  mainWindow.on('close', function (event) {
+    if (!app.isQuiting) {
+        event.preventDefault();
+        mainWindow.hide(); 
+    }
+    return false;
+  });
+
+  mainWindow.on('closed', () => { 
+    mainWindow = null; 
+  });
 }
 
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 });
 
-Menu.setApplicationMenu(null);
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});

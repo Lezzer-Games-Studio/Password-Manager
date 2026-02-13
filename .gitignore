@@ -3,5 +3,7 @@ dist/
 .env
 .vscode/
 release/
-packege.json
+package.json
 package-lock.json
+install.txt
+server/

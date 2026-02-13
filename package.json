@@ -1,18 +1,23 @@
 {
   "name": "password-manager",
-  "version": "1.0.1",
+  "version": "1.0.5",
   "description": "Password Manager with auto update",
   "main": "src/main/index.js",
   "author": "LEZZER GAMES STUDIO",
   "license": "MIT",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lezzer-Games-Studio/Password-Manager.git"
+  },
 
   "scripts": {
     "start": "electron .",
-    "dev": "electron .",
     "clean": "rimraf dist",
-    "build:win": "electron-builder --win --x64 --publish never",
-    "build:publish": "electron-builder --win --x64 --publish always"
+    "build": "electron-builder --win --x64",
+    "build:win": "electron-builder --win --x64",
+    "release": "electron-builder --win --x64 --publish always",
+    "release:local": "electron-builder --win --x64 --publish never"
   },
 
   "dependencies": {
@@ -29,7 +34,8 @@
   "build": {
     "appId": "com.lezzergames.passwordmanager",
     "productName": "Password Manager",
-
+    "copyright": "Copyright © 2024 LEZZER GAMES STUDIO",
+    
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -43,22 +49,39 @@
     "asar": true,
 
     "win": {
-      "target": "nsis",
-      "icon": "build/icon.ico"
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        },
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "publisherName": "LEZZER GAMES STUDIO"
     },
 
     "nsis": {
       "oneClick": false,
+      "perMachine": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "shortcutName": "Password Manager",
+      "uninstallDisplayName": "Password Manager",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
     },
 
     "publish": [
       {
         "provider": "github",
         "owner": "Lezzer-Games-Studio",
-        "repo": "Password-Manager"
+        "repo": "Password-Manager",
+        "releaseType": "release",
+        "private": false
       }
     ]
   }

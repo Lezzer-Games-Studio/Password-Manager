@@ -1,11 +1,47 @@
 import { auth, db } from './firebase.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Глобальный объект для хранения текущего пользователя
+
+
+
+// Функція перевірки
+// В app.js
+async function startReminderCheck(userId, db) {
+    setInterval(async () => {
+        const now = Date.now();
+        const windowStart = now - 60000;
+        const windowEnd = now + 60000;
+
+        const q = query(
+            collection(db, "notes"),
+            where("userId", "==", userId),
+            where("reminder", ">=", windowStart), // Перевірте назву поля!
+            where("reminder", "<=", windowEnd)
+        );
+
+        const snap = await getDocs(q);
+        snap.forEach(doc => {
+            // Щоб не було повторів, можна перевіряти чи вже показували
+            new Notification("VaultSafe", { body: doc.data().text });
+        });
+    }, 60000);
+}
+
+// У вашому onAuthStateChanged додайте виклик:
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // ... ваш існуючий код ...
+        startReminderCheck(user.uid, db);
+    }
+});
+
+// Глобальний об'єкт для зберігання поточного користувача
 let currentUser = null;
 
-// Упрощенная версия навигации без динамических импортов для скорости
+// Централізована навігація додатку
 window.navigation = {
+    // 1. ПРОФІЛЬ
     showProfile: async (user) => {
         currentUser = user || currentUser;
         try {
@@ -13,69 +49,85 @@ window.navigation = {
             renderProfile(currentUser, auth, db, 
                 () => window.navigation.showVault(),
                 () => window.navigation.showSettings(),
-                () => window.navigation.showSubscribe()
+                () => window.navigation.showSubscribe(),
+                () => window.navigation.showNotes() // Перехід на нотатки
             );
         } catch (error) {
             console.error('Error loading profile:', error);
         }
     },
     
+    // 2. СЕЙФ (ПАРОЛІ)
     showVault: async (user) => {
         const targetUser = user || currentUser;
-        if (!targetUser) {
-            console.error('No user found for vault');
-            return;
-        }
+        if (!targetUser) return;
         try {
             const { renderVault } = await import('./pages/vault.js');
             renderVault(targetUser, auth, db,
                 () => window.navigation.showProfile(),
-                () => window.navigation.showSettings()
+                () => window.navigation.showSettings(),
+                () => window.navigation.showNotes() // Додано в меню сейфу
             );
         } catch (error) {
             console.error('Error loading vault:', error);
         }
     },
+
+    // 3. НОТАТКИ ТА ЗАВДАННЯ (НОВИЙ РОЗДІЛ)
+    showNotes: async (user) => {
+        const targetUser = user || currentUser;
+        if (!targetUser) return;
+        try {
+            const { renderNotes } = await import('./pages/notes.js');
+            renderNotes(targetUser, auth, db,
+                () => window.navigation.showProfile(),
+                () => window.navigation.showVault(),
+                () => window.navigation.showSettings(),
+                () => window.navigation.showSubscribe()
+            );
+        } catch (error) {
+            console.error('Error loading notes:', error);
+        }
+    },
     
+    // 4. НАЛАШТУВАННЯ
     showSettings: async (user) => {
         const targetUser = user || currentUser;
-        if (!targetUser) {
-            console.error('No user found for settings');
-            return;
-        }
+        if (!targetUser) return;
         try {
             const { renderSettings } = await import('./pages/settings.js');
             renderSettings(targetUser, auth, db,
                 () => window.navigation.showProfile(),
                 () => window.navigation.showVault(),
-                () => window.navigation.showSubscribe()
+                () => window.navigation.showSubscribe(),
+                () => window.navigation.showNotes() // Додано
             );
         } catch (error) {
             console.error('Error loading settings:', error);
         }
     },
     
+    // 5. ПІДПИСКА (PRO)
     showSubscribe: async (user) => {
         const targetUser = user || currentUser;
-        if (!targetUser) {
-            console.error('No user found for subscribe');
-            return;
-        }
+        if (!targetUser) return;
         try {
             const { renderSubscribe } = await import('./pages/subscribe.js');
-            // Передаем все необходимые функции навигации
             renderSubscribe(targetUser, auth, db,
-                () => window.navigation.showProfile(),
-                () => window.navigation.showProfile(),  // onToProfile
-                () => window.navigation.showVault(),    // onToVault
-                () => window.navigation.showSettings()  // onToSettings
+                () => window.navigation.showProfile(), // onBack
+                () => window.navigation.showProfile(), // onToProfile
+                () => window.navigation.showVault(),   // onToVault
+                () => window.navigation.showSettings(), // onToSettings
+                () => window.navigation.showNotes()    // onToNotes
             );
         } catch (error) {
             console.error('Error loading subscribe:', error);
         }
     },
     
-    showLogin: async () => {
+    
+    // 6. АВТОРИЗАЦІЯ ТА РЕЄСТРАЦІЯ
+   showLogin: async () => {
         try {
             const { renderLogin } = await import('./pages/login.js');
             renderLogin(auth, 
@@ -98,70 +150,73 @@ window.navigation = {
     }
 };
 
-// Проверка авторизации
+// Слідкуємо за станом входу користувача
 onAuthStateChanged(auth, (user) => {
+    const root = document.getElementById('root');
+    
     if (user) {
-        // Сохраняем пользователя
         currentUser = {
             uid: user.uid,
             email: user.email,
             displayName: user.displayName
         };
         
-        // Сохраняем в localStorage
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
         
-        // Показываем загрузку
-        document.getElementById('root').innerHTML = `
-            <div style="display:flex; justify-content:center; align-items:center; height:100vh; color:var(--text-dim);">
-                <div style="text-align:center;">
-                    <div style="width:50px; height:50px; border:3px solid var(--accent); border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 15px;"></div>
-                    <p>Завантаження...</p>
+        // Показуємо лоадер перед завантаженням інтерфейсу
+        root.innerHTML = `
+            <div class="loader-container">
+                <div class="loader-visual">
+                    <div class="spinner"></div>
+                    <div class="spinner-inner"></div>
+                    <div class="loader-logo">🛡️</div>
                 </div>
+                <div class="loader-text">Вхід до VaultSafe...</div>
             </div>
         `;
         
-        // Загружаем профиль с небольшой задержкой для UX
         setTimeout(() => {
             window.navigation.showProfile(currentUser);
         }, 300);
         
     } else {
-        // Очищаем
         currentUser = null;
         localStorage.removeItem('currentUser');
-        
-        // Показываем логин
         window.navigation.showLogin();
     }
 });
 
-// CSS для анимации загрузки
+// Додаємо стилі для спіннера завантаження
 const style = document.createElement('style');
 style.textContent = `
+    .loader-container {
+        display: flex; flex-direction: column; justify-content: center; 
+        align-items: center; height: 100vh; color: #94a3b8; font-family: sans-serif;
+    }
+    .spinner {
+        width: 40px; height: 40px; border: 3px solid rgba(59, 130, 246, 0.1);
+        border-top-color: #3b82f6; border-radius: 50%;
+        animation: spin 0.8s linear infinite; margin-bottom: 15px;
+    }
     @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        to { transform: rotate(360deg); }
     }
 `;
 document.head.appendChild(style);
 
-// ... твій існуючий код (Firebase, навігація тощо) ...
-
-// ЛОГІКА ОНОВЛЕННЯ ДЛЯ КОРИСТУВАЧА
+// --- Electron API: Оновлення програми ---
 if (window.electronAPI) {
-    // 1. Повідомляємо, що знайшли оновлення
     window.electronAPI.onUpdateAvailable((version) => {
-        console.log(`Знайдено оновлення: ${version}`);
-        // Можна показати плашку в UI
-        alert(`Доступна нова версія ${version}. Завантаження почалося...`);
+        // Замість alert можна зробити гарну плашку внизу екрана
+        console.log(`Доступне оновлення: ${version}`);
     });
 
-    // 2. Коли все готово — пропонуємо перезавантажити
     window.electronAPI.onUpdateDownloaded(() => {
-        const userConfirmed = confirm("Оновлення завантажено! Перезапустити програму зараз?");
-        if (userConfirmed) {
+        const confirmUpdate = confirm("Нова версія готова до встановлення. Перезавантажити зараз?");
+        if (confirmUpdate) {
             window.electronAPI.restartApp();
         }
     });
 }
+
+// Функція для перевірки нагадувань

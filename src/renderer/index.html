@@ -170,14 +170,80 @@
 .method-btn:hover:not(.active) {
     background: rgba(255,255,255,0.1);
 }
+
+/* Стилі для нового екрану завантаження */
+.loader-container {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at center, #1e293b 0%, #0f1117 100%);
+    color: var(--text-main);
+    gap: 20px;
+}
+
+.loader-visual {
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.spinner {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 3px solid transparent;
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s cubic-bezier(0.76, 0, 0.24, 1) infinite;
+}
+
+.spinner-inner {
+    position: absolute;
+    top: 10px; left: 10px; right: 10px; bottom: 10px;
+    border: 3px solid transparent;
+    border-top-color: #60a5fa;
+    border-radius: 50%;
+    animation: spin 1.5s cubic-bezier(0.76, 0, 0.24, 1) infinite;
+    opacity: 0.5;
+}
+
+.loader-logo {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    filter: drop-shadow(0 0 10px var(--accent));
+}
+
+.loader-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    animation: pulse 2s infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
     </style>
 </head>
 <body>
     <div id="root">
             <!-- Контент загружается через JavaScript -->
-            <div style="display:flex; justify-content:center; align-items:center; width:100%;">
+            <!-- <div style="display:flex; justify-content:center; align-items:center; width:100%;">
                 <p>Завантаження...</p>
-            </div>
+            </div> -->
         </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
